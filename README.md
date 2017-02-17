@@ -3,4 +3,7 @@
 
 Resources management script with GUID in XML.
 
-Unityのリソースファイルを管理するアセット。
+ScriptableObjectでリソースを一元管理するアセット。
+
+アセットのGUIDとパスをXMLファイルに保存する仕組み。
+ScriptableObjectのmetaファイルの変更が無く、競合が発生してもXMLファイルをマージするだけで済む。
