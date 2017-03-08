@@ -77,8 +77,6 @@ public partial class ResourcePath : ScriptableObject
 		serialzier.Serialize(writer, array);
 
 		writer.Close();
-
-		UnityEditor.AssetDatabase.Refresh();
 #endif
 	}
 
@@ -96,10 +94,12 @@ public partial class ResourcePath : ScriptableObject
 			}
 
 			if (field.FieldType == typeof(ResourceAsset)) {
-				SetLoadedValue(obj, field, hierarchy, deserialized);
-				resourceList.Add((ResourceAsset)field.GetValue(obj));
+				if (TrySetLoadedValue (obj, field, hierarchy, deserialized)) {
+					resourceList.Add ((ResourceAsset)field.GetValue (obj));
+				} else {
+					Debug.Log ("Error! : " + obj);
+				}
 			} else if (field.FieldType.IsValueType && field.IsPublic) {
-
 				field.SetValue(obj, SetValues(field.GetValue(obj),
 											  Path.Combine(hierarchy, field.Name),
 											  deserialized,
@@ -110,13 +110,17 @@ public partial class ResourcePath : ScriptableObject
 		return obj;
 	}
 
-	void SetLoadedValue(object obj,
+	bool TrySetLoadedValue(object obj,
 						FieldInfo fieldInfo,
 						string hierarchy,
 						ResourceAsset[] deserialized)
 	{
 		for (int i = 0; i < deserialized.Length; i++) {
 			var resourceAsset = deserialized[i];
+			if (string.IsNullOrEmpty (resourceAsset._name)) {
+				continue;
+			}
+
 			if (resourceAsset._name.Equals(Path.Combine(hierarchy, fieldInfo.Name))) {
 #if UNITY_EDITOR
 				resourceAsset._path = AssetPathToResourcePath(
@@ -124,9 +128,11 @@ public partial class ResourcePath : ScriptableObject
 				);
 #endif
 				fieldInfo.SetValue(obj, resourceAsset);
-				break;
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	string AssetPathToGUID(string path)
@@ -149,7 +155,11 @@ public partial class ResourcePath : ScriptableObject
 
 	string AssetPathToResourcePath(string assetPath)
 	{
-		var path = assetPath.Remove(0, assetPath.IndexOf("Resources/", System.StringComparison.Ordinal) + 10);
+		var idx = assetPath.IndexOf("Resources/", System.StringComparison	.Ordinal);
+		if (idx < 0) {
+			return "";
+		}
+		var path = assetPath.Remove(0, idx + 10);
 		var extension = Path.GetExtension(path);
 		if (!string.IsNullOrEmpty(extension)) {
 			path = path.Remove(path.Length - extension.Length, extension.Length);

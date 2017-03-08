@@ -27,9 +27,9 @@ public class ResourcePathEditor : Editor
 		var list = new List<ResourceAsset>();
 		var isUpdated = false;
 		TryUpdateValues(serializedObject.targetObject, "", ref list, out isUpdated);
-
 		if (isUpdated) {
 			resourcePath.UpdateXML(list);
+			serializedObject.ApplyModifiedProperties ();
 			AssetDatabase.Refresh();
 		}
 	}
