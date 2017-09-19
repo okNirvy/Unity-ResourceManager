@@ -56,7 +56,7 @@ public partial class ResourcePath : ScriptableObject
 	public void UpdateXML(List<ResourceAsset> resourceList)
 	{
 #if UNITY_EDITOR
-		var path = Path.Combine("Assets/Resources", xmlPath + ".xml");
+		var path = CombinePath("Assets/Resources", xmlPath + ".xml");
 		var directory = Path.GetDirectoryName(path);
 		if (!Directory.Exists(directory)) {
 			Directory.CreateDirectory(directory);
@@ -101,7 +101,7 @@ public partial class ResourcePath : ScriptableObject
 				}
 			} else if (field.FieldType.IsValueType && field.IsPublic) {
 				field.SetValue(obj, SetValues(field.GetValue(obj),
-											  Path.Combine(hierarchy, field.Name),
+                                              CombinePath(hierarchy, field.Name),
 											  deserialized,
 											  ref resourceList));
 			}
@@ -121,7 +121,7 @@ public partial class ResourcePath : ScriptableObject
 				continue;
 			}
 
-			if (resourceAsset._name.Equals(Path.Combine(hierarchy, fieldInfo.Name))) {
+			if (resourceAsset._name.Equals(CombinePath(hierarchy, fieldInfo.Name))) {
 #if UNITY_EDITOR
 				resourceAsset._path = AssetPathToResourcePath(
 					GUIDToAssetPath(resourceAsset._guid)
@@ -167,4 +167,9 @@ public partial class ResourcePath : ScriptableObject
 
 		return path;
 	}
+
+    string CombinePath(string path1, string path2)
+    {
+        return Path.Combine(path1, path2).Replace("\\", "/");
+    }
 }
